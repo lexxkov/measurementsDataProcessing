@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 class DataProc:
     def __init__(self, baseFilename, OpAmount, ConAmount,Repeat):
@@ -15,7 +16,6 @@ class DataProc:
         op = 0
         con = 0
         re = 0
-        # list = []
         for line in self.datFile:
             if op == self.OpAmount:
                 op = 0
@@ -38,27 +38,64 @@ class DataProc:
                 print "Connector{0}: {1}  Std: {2}".format(con, self.Data[OpNum][con], np.std(self.Data[OpNum][con]))
                 None
 
-    def plotOp(self, OpNum):
+    def saveplot(self, name=''):
+        pwd = os.getcwd()
+        iPath = './pictures'
+        if not os.path.exists(iPath):
+            os.mkdir(iPath)
+        os.chdir(iPath)
+        plt.savefig('{}.{}'.format(name, 'png'))
+        os.chdir(pwd)
+
+    def plotOp(self, OpNum, Show=False, Save=False):
         fig = plt.figure()
-        X = [i for i in range(self.ConAmount)]
+        plt.title('Operator{}'.format(OpNum))
+        plt.ylabel('Value, a.u.')
+        plt.xlabel('Connector Number')
+        ax = fig.add_subplot(111)
+        X = np.arange(self.ConAmount)
         Y = [[self.Data[OpNum][i][j] for i in range(self.ConAmount)] for j in range(self.Repeat)]
-        # F = plt.plot(lambda: X,Y[k] for k in range(self.Repeat), 'rx')
+
+        Txt=''
+        for i in range(self.ConAmount):
+            Txt=Txt+"Std{0}: {1:.5f}\n".format(i, np.std(self.Data[OpNum][i]))
+
+        ax.text(0.99, 0.74, Txt, fontsize=10, transform=ax.transAxes, horizontalalignment='right', verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
+
         for j in range(self.Repeat):
             plt.plot(X,Y[j], 'gx')
-        plt.show()
+        if Save:
+            name = 'Operator{}'.format(OpNum)
+            self.saveplot(name)
+        if Show:
+            plt.show()
 
-    def plotCon(self, ConNum):
+    def plotCon(self, ConNum,Show=False, Save=False):
         fig = plt.figure()
-        X = [i for i in range(self.OpAmount)]
+        plt.title('Connector{}'.format(ConNum))
+        plt.ylabel('Value, a.u.')
+        plt.xlabel('Operator Number')
+        plt.axis(xmin=-0.1, xmax=self.OpAmount)
+        ax = fig.add_subplot(111)
+        X = np.arange(self.OpAmount)
+        print X
         Y = [[self.Data[i][ConNum][j] for i in range(self.OpAmount)] for j in range(self.Repeat)]
-        # F = plt.plot(lambda: X,Y[k] for k in range(self.Repeat), 'rx')
+        ax.set_xticks(X, minor=False)
+
         for j in range(self.Repeat):
             plt.plot(X,Y[j], 'gx')
-        plt.show()
+        Txt=''
+        for i in range(self.OpAmount):
+            Txt=Txt+"Std{0}: {1:.5f}\n".format(i, np.std(self.Data[i][ConNum]))
 
+        ax.text(0.99, 0.9, Txt, fontsize=10, transform=ax.transAxes, horizontalalignment='right', verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
 
-        # ax = plt.axes([x for x in range(self.ConAmount)], [np.std(self.Data[OpNum][x]) for x in range(self.ConAmount)])
-        # ax.plot([], [], lw=2)
+        if Save:
+            name = 'Connector{}'.format(ConNum)
+            self.saveplot(name)
+
+        if Show:
+            plt.show()
 
     def close(self):
             self.datFile.close()
